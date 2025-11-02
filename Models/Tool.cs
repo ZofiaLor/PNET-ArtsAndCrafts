@@ -4,6 +4,7 @@
     {
         public string Material { get; set; }
         public string Type { get; set; }
+        public string Brand { get; set; }
         public int Size { get; set; }
     }
 }

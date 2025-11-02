@@ -6,6 +6,8 @@ namespace ArtsAndCrafts.Models
     {
         public string Content { get; set; }
         public string Type { get; set; }
+        public DateTime CreationDate { get; set; }
+        public DateTime LastEditDate { get; set; }
 
         public int AuthorId { get; set; }
 
