@@ -1,0 +1,99 @@
+﻿@page "/patterns/edit"
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Pattern</h2>
+<hr />
+@if (Pattern is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Pattern" OnValidSubmit="UpdatePattern" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Pattern.Id" value="@Pattern.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Pattern.Name" class="form-control" />
+                    <ValidationMessage For="() => Pattern.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content:</label>
+                    <InputText id="content" @bind-Value="Pattern.Content" class="form-control" />
+                    <ValidationMessage For="() => Pattern.Content" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="type" class="form-label">Type:</label>
+                    <InputText id="type" @bind-Value="Pattern.Type" class="form-control" />
+                    <ValidationMessage For="() => Pattern.Type" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/patterns">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Pattern? Pattern { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Pattern ??= await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Pattern is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdatePattern()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Pattern!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PatternExists(Pattern!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/patterns");
+    }
+
+    private bool PatternExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Patterns.Any(e => e.Id == id);
+    }
+}

@@ -1,0 +1,41 @@
+﻿@page "/patterns"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using ArtsAndCrafts.Models
+@using ArtsAndCrafts.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="patterns/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Patterns">
+    <PropertyColumn Property="pattern => pattern.Content" />
+    <PropertyColumn Property="pattern => pattern.Type" />
+    <PropertyColumn Property="pattern => pattern.CreationDate" />
+    <PropertyColumn Property="pattern => pattern.LastEditDate" />
+    <PropertyColumn Property="pattern => pattern.AuthorId" />
+    <PropertyColumn Property="pattern => pattern.Name" />
+
+    <TemplateColumn Context="pattern">
+        <a href="@($"patterns/edit?id={pattern.Id}")">Edit</a> |
+        <a href="@($"patterns/details?id={pattern.Id}")">Details</a> |
+        <a href="@($"patterns/delete?id={pattern.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

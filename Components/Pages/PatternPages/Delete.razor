@@ -1,0 +1,75 @@
+﻿@page "/patterns/delete"
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Pattern</h2>
+    <hr />
+    @if (pattern is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Content</dt>
+            <dd class="col-sm-10">@pattern.Content</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Type</dt>
+            <dd class="col-sm-10">@pattern.Type</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CreationDate</dt>
+            <dd class="col-sm-10">@pattern.CreationDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">LastEditDate</dt>
+            <dd class="col-sm-10">@pattern.LastEditDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">AuthorId</dt>
+            <dd class="col-sm-10">@pattern.AuthorId</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@pattern.Name</dd>
+        </dl>
+        <EditForm method="post" Model="pattern" OnValidSubmit="DeletePattern" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(pattern is null)">Delete</button> |
+            <a href="/patterns">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Pattern? pattern;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        pattern = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (pattern is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeletePattern()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Patterns.Remove(pattern!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/patterns");
+    }
+}
