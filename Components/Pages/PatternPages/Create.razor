@@ -25,14 +25,14 @@
                 <ValidationMessage For="() => Pattern.Name" class="text-danger" />
             </div>
             <div class="mb-3">
-                <label for="content" class="form-label">Content:</label> 
-                <InputText id="content" @bind-Value="Pattern.Content" class="form-control" /> 
-                <ValidationMessage For="() => Pattern.Content" class="text-danger" /> 
-            </div>        
+                <label for="type" class="form-label">Type:</label>
+                <InputText id="type" @bind-Value="Pattern.Type" class="form-control" />
+                <ValidationMessage For="() => Pattern.Type" class="text-danger" />
+            </div>
             <div class="mb-3">
-                <label for="type" class="form-label">Type:</label> 
-                <InputText id="type" @bind-Value="Pattern.Type" class="form-control" /> 
-                <ValidationMessage For="() => Pattern.Type" class="text-danger" /> 
+                <label for="content" class="form-label">Content:</label> 
+                <InputTextArea id="content" @bind-Value="Pattern.Content" class="form-control" /> 
+                <ValidationMessage For="() => Pattern.Content" class="text-danger" /> 
             </div>   
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>

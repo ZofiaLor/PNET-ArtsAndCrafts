@@ -14,13 +14,10 @@
     <a href="patterns/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Patterns">
-    <PropertyColumn Property="pattern => pattern.Content" />
-    <PropertyColumn Property="pattern => pattern.Type" />
-    <PropertyColumn Property="pattern => pattern.CreationDate" />
-    <PropertyColumn Property="pattern => pattern.LastEditDate" />
-    <PropertyColumn Property="pattern => pattern.AuthorId" />
+<QuickGrid Class="table" Items="context.Patterns.Include(p => p.Author)">
     <PropertyColumn Property="pattern => pattern.Name" />
+    <PropertyColumn Property="pattern => pattern.Type" />
+    <PropertyColumn Property="pattern => pattern.Author.UserName" />
 
     <TemplateColumn Context="pattern">
         <a href="@($"patterns/edit?id={pattern.Id}")">Edit</a> |

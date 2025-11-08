@@ -28,14 +28,14 @@ else
                     <ValidationMessage For="() => Pattern.Name" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="content" class="form-label">Content:</label>
-                    <InputText id="content" @bind-Value="Pattern.Content" class="form-control" />
-                    <ValidationMessage For="() => Pattern.Content" class="text-danger" />
-                </div>
-                <div class="mb-3">
                     <label for="type" class="form-label">Type:</label>
                     <InputText id="type" @bind-Value="Pattern.Type" class="form-control" />
                     <ValidationMessage For="() => Pattern.Type" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content:</label>
+                    <InputTextArea id="content" @bind-Value="Pattern.Content" class="form-control" />
+                    <ValidationMessage For="() => Pattern.Content" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -70,30 +70,19 @@ else
     private async Task UpdatePattern()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Attach(Pattern!).State = EntityState.Modified;
+        var editedPattern = await context.Patterns.FindAsync(Id);
+        if (editedPattern is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
 
-        try
-        {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!PatternExists(Pattern!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+        editedPattern.Name = Pattern.Name;
+        editedPattern.Content = Pattern.Content;
+        editedPattern.Type = Pattern.Type;
+        editedPattern.LastEditDate = DateTime.Now;
+
+        await context.SaveChangesAsync();
 
         NavigationManager.NavigateTo("/patterns");
-    }
-
-    private bool PatternExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Patterns.Any(e => e.Id == id);
     }
 }
