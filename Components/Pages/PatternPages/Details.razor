@@ -1,13 +1,15 @@
 ﻿@page "/patterns/details"
+@rendermode InteractiveServer
 @using ArtsAndCrafts.Data
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
 
 <PageTitle>Details</PageTitle>
 
-@if (pattern is null)
+@if (pattern is null || Comment is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -25,6 +27,27 @@ else {
         <a href="@($"/patterns/edit?id={pattern.Id}")">Edit</a> |
         <a href="@($"/patterns")">Back to List</a>
     </div>
+
+    <h2>Comments</h2>
+    <hr />
+    @foreach (var c in pattern.Comments)
+    {
+        <div class="card card-body">
+            @c.Author.UserName commented on @c.CreationDate <hr />
+            @c.Content
+        </div>
+    }
+    <EditForm method="post" Model="Comment" OnValidSubmit="AddComment" FormName="create" Enhance>
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" role="alert" />
+        <div class="mb-3">
+            <label for="content" class="form-label">Add new comment</label>
+            <InputTextArea id="content" @bind-Value="Comment.Content" class="form-control" />
+            <ValidationMessage For="() => Comment.Content" class="text-danger" />
+        </div>
+        <button type="submit" class="btn btn-primary">Comment</button>
+    </EditForm>
+
 }
 
 @code {
@@ -33,14 +56,34 @@ else {
     [SupplyParameterFromQuery]
     private int Id { get; set; }
 
+    [SupplyParameterFromForm]
+    private Comment Comment { get; set; } = new();
+
+    private ApplicationDbContext? context;
+
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        pattern = await context.Patterns.Include(p => p.Author).FirstOrDefaultAsync(m => m.Id == Id);
+        context = DbFactory.CreateDbContext();
+        pattern = await context.Patterns.Include(p => p.Author).Include(p => p.Comments).ThenInclude(c => c.Author).FirstOrDefaultAsync(m => m.Id == Id);
 
         if (pattern is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
+    }
+
+    private async Task AddComment()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        var username = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        var user = await context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
+        Comment.Author = user;
+        Comment.AuthorId = user.Id;
+        Comment.CraftObject = pattern;
+        Comment.CraftObjectId = pattern.Id;
+        Comment.CreationDate = DateTime.Now;
+        context.Comments.Add(Comment);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/patterns/details?id=" + pattern.Id);
     }
 }
