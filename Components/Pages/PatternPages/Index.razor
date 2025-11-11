@@ -1,4 +1,5 @@
 ﻿@page "/patterns"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using ArtsAndCrafts.Models
@@ -22,7 +23,7 @@
 </p>
 
 <QuickGrid Class="table" Items="context.Patterns.Include(p => p.Author)">
-    <PropertyColumn Property="pattern => pattern.Name" />
+    <PropertyColumn Property="pattern => pattern.Name" Sortable="true" />
     <PropertyColumn Property="pattern => pattern.Type" />
     <PropertyColumn Property="pattern => pattern.Author.UserName" />
 

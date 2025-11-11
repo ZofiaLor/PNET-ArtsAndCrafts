@@ -1,0 +1,118 @@
+﻿@page "/yarns/details"
+@rendermode InteractiveServer
+@using ArtsAndCrafts.Data
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Yarn</h2>
+    <hr />
+    @if (yarn is null || Comment is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@yarn.Name</dd>
+            <dt class="col-sm-2">Material</dt>
+            <dd class="col-sm-10">@yarn.Material</dd>
+            <dt class="col-sm-2">Color</dt>
+            <dd class="col-sm-10">@yarn.Color</dd>
+            <dt class="col-sm-2">Brand</dt>
+            <dd class="col-sm-10">@yarn.Brand</dd>
+            <dt class="col-sm-2">Weight</dt>
+            <dd class="col-sm-10">@yarn.Weight</dd>
+        </dl>
+        <div>
+            <a href="@($"/yarns/edit?id={yarn.Id}")">Edit</a> |
+            <a href="@($"/yarns")">Back to List</a>
+        </div>
+        <h2>Comments</h2>
+        <hr />
+        @foreach (var c in yarnComments)
+        {
+            @if (user is not null && c.AuthorId == user.Id)
+            {
+                <div class="card border-info card-body">
+                    You commented on @c.CreationDate <hr />
+                    <div style="white-space: pre-wrap">@c.Content</div>
+                </div>
+            }
+            else
+            {
+                <div class="card card-body">
+                    <div>@c.Author.UserName commented on @c.CreationDate <hr /></div>
+                    <div style="white-space: pre-wrap">@c.Content</div>
+                </div>
+            }
+
+        }
+        <AuthorizeView Context="authContext">
+            <Authorized>
+                <EditForm method="post" Model="Comment" OnValidSubmit="AddComment" FormName="create" Enhance>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Add new comment</label>
+                        <InputTextArea id="content" @bind-Value="Comment.Content" class="form-control" />
+                        <ValidationMessage For="() => Comment.Content" class="text-danger" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Comment</button>
+                </EditForm>
+            </Authorized>
+            <NotAuthorized>
+                <p>Log in to comment on this pattern</p>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+</div>
+
+@code {
+    private Yarn? yarn;
+    private ApplicationUser? user;
+    private List<Comment>? yarnComments;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+    [SupplyParameterFromForm]
+    private Comment Comment { get; set; } = new();
+
+    private ApplicationDbContext? context;
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        yarn = await context.Yarns.FirstOrDefaultAsync(m => m.Id == Id);
+        var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (claims is not null)
+            user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();
+
+        if (yarn is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        yarnComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == yarn.Id).ToListAsync();
+    }
+
+    private async Task AddComment()
+    {
+        if (user is null) return;
+        Comment.Author = user;
+        Comment.AuthorId = user.Id;
+        Comment.CraftObject = yarn;
+        Comment.CraftObjectId = yarn.Id;
+        Comment.CreationDate = DateTime.Now;
+        context.Comments.Add(Comment);
+        await context.SaveChangesAsync();
+        yarnComments.Add(Comment);
+        NavigationManager.NavigateTo("/yarns/details?id=" + yarn.Id);
+    }
+}

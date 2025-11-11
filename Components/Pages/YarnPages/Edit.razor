@@ -1,0 +1,109 @@
+﻿@page "/yarns/edit"
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Yarn</h2>
+<hr />
+@if (Yarn is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Yarn" OnValidSubmit="UpdateYarn" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Yarn.Id" value="@Yarn.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Yarn.Name" class="form-control" />
+                    <ValidationMessage For="() => Yarn.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="material" class="form-label">Material:</label>
+                    <InputText id="material" @bind-Value="Yarn.Material" class="form-control" />
+                    <ValidationMessage For="() => Yarn.Material" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="color" class="form-label">Color:</label>
+                    <InputText id="color" @bind-Value="Yarn.Color" class="form-control" />
+                    <ValidationMessage For="() => Yarn.Color" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="brand" class="form-label">Brand:</label>
+                    <InputText id="brand" @bind-Value="Yarn.Brand" class="form-control" />
+                    <ValidationMessage For="() => Yarn.Brand" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="weight" class="form-label">Weight:</label>
+                    <InputNumber id="weight" @bind-Value="Yarn.Weight" class="form-control" />
+                    <ValidationMessage For="() => Yarn.Weight" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/yarns">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Yarn? Yarn { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Yarn ??= await context.Yarns.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Yarn is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateYarn()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Yarn!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!YarnExists(Yarn!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/yarns");
+    }
+
+    private bool YarnExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Yarns.Any(e => e.Id == id);
+    }
+}

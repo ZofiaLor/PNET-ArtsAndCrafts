@@ -1,0 +1,41 @@
+﻿@page "/yarns"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using ArtsAndCrafts.Models
+@using ArtsAndCrafts.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="yarns/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Yarns">
+    <PropertyColumn Property="yarn => yarn.Name" Sortable="true" />
+    <PropertyColumn Property="yarn => yarn.Material" />
+    <PropertyColumn Property="yarn => yarn.Color" />
+    <PropertyColumn Property="yarn => yarn.Brand" />
+    <PropertyColumn Property="yarn => yarn.Weight" />
+
+    <TemplateColumn Context="yarn">
+        <a href="@($"yarns/edit?id={yarn.Id}")">Edit</a> |
+        <a href="@($"yarns/details?id={yarn.Id}")">Details</a> |
+        <a href="@($"yarns/delete?id={yarn.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

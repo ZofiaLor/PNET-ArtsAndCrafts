@@ -1,5 +1,6 @@
 ﻿@page "/patterns/edit"
 @attribute [Authorize]
+@rendermode InteractiveServer
 @using ArtsAndCrafts.Data
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
@@ -13,7 +14,7 @@
 
 <h2>Pattern</h2>
 <hr />
-@if (Pattern is null)
+@if (Pattern is null || yarnList is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -43,6 +44,25 @@ else
                     <InputTextArea id="content" @bind-Value="Pattern.Content" class="form-control" />
                     <ValidationMessage For="() => Pattern.Content" class="text-danger" />
                 </div>
+                <div class="mb-3">
+                    Add yarn to pattern:
+                    @foreach (var yarn in yarnList)
+                    {
+                        @if (Pattern.Yarns.Contains(yarn))
+                        {
+                            <div>
+                                @yarn.Name <button type="button" class="btn btn-outline-danger" @onclick="@(e => removeYarn(yarn))">Remove from pattern</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                @yarn.Name <button type="button" class="btn btn-outline-success" @onclick="@(e => addYarn(yarn))">Add to pattern</button>
+                            </div>
+                        }
+                    }
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>
@@ -61,11 +81,13 @@ else
     private Pattern? Pattern { get; set; }
 
     private ApplicationDbContext? context;
+    private List<Yarn>? yarnList;
 
     protected override async Task OnInitializedAsync()
     {
         context ??= DbFactory.CreateDbContext();
-        Pattern ??= await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+        Pattern ??= await context.Patterns.Include(p => p.Yarns).FirstOrDefaultAsync(m => m.Id == Id);
+        yarnList ??= await context.Yarns.ToListAsync();
         var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
         if (claims is not null)
         {
@@ -101,5 +123,15 @@ else
         await context.SaveChangesAsync();
 
         NavigationManager.NavigateTo("/patterns/details?id=" + Pattern.Id);
+    }
+
+    private void addYarn(Yarn yarn)
+    {
+        Pattern.Yarns.Add(yarn);
+    }
+
+    private void removeYarn(Yarn yarn)
+    {
+        Pattern.Yarns.Remove(yarn);
     }
 }
