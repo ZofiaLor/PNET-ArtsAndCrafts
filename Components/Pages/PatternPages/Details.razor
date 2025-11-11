@@ -23,35 +23,68 @@ else {
     <div class="card">
         <div class="card-body" style="white-space: pre-wrap">@pattern.Content</div>
     </div>
-    <div>
-        <a href="@($"/patterns/edit?id={pattern.Id}")">Edit</a> |
-        <a href="@($"/patterns")">Back to List</a>
-    </div>
+    @if (user is not null && pattern.AuthorId == user.Id)
+    {
+        <div>
+            <a href="@($"/patterns/edit?id={pattern.Id}")">Edit</a> |
+            <a href="@($"/patterns/delete?id={pattern.Id}")">Delete</a> |
+            <a href="@($"/patterns")">Back to List</a>
+        </div>
+    }
 
     <h2>Comments</h2>
     <hr />
-    @foreach (var c in pattern.Comments)
+    @foreach (var c in patternComments)
     {
-        <div class="card card-body">
-            @c.Author.UserName commented on @c.CreationDate <hr />
-            @c.Content
-        </div>
+        @if (user is not null && c.AuthorId == user.Id)
+        {
+            <div class="card border-info card-body">
+                You commented on @c.CreationDate <hr />
+                <div style="white-space: pre-wrap">@c.Content</div>
+            </div>
+        }
+        else
+        {
+            <div class="card card-body">
+
+                @if (c.AuthorId == pattern.AuthorId)
+                {
+                    <div>@c.Author.UserName <span class="badge bg-success">Pattern creator</span> commented on @c.CreationDate <hr /></div>
+                }
+                else
+                {
+                    <div>@c.Author.UserName commented on @c.CreationDate <hr /></div>
+                }
+                <div style="white-space: pre-wrap">@c.Content</div>
+            </div>
+        }
+
     }
-    <EditForm method="post" Model="Comment" OnValidSubmit="AddComment" FormName="create" Enhance>
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
-        <div class="mb-3">
-            <label for="content" class="form-label">Add new comment</label>
-            <InputTextArea id="content" @bind-Value="Comment.Content" class="form-control" />
-            <ValidationMessage For="() => Comment.Content" class="text-danger" />
-        </div>
-        <button type="submit" class="btn btn-primary">Comment</button>
-    </EditForm>
+
+    <AuthorizeView Context="authContext">
+        <Authorized>
+            <EditForm method="post" Model="Comment" OnValidSubmit="AddComment" FormName="create" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+                <div class="mb-3">
+                    <label for="content" class="form-label">Add new comment</label>
+                    <InputTextArea id="content" @bind-Value="Comment.Content" class="form-control" />
+                    <ValidationMessage For="() => Comment.Content" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Comment</button>
+            </EditForm>
+        </Authorized>
+        <NotAuthorized>
+            <p>Log in to comment on this pattern</p>
+        </NotAuthorized>
+    </AuthorizeView>
 
 }
 
 @code {
     private Pattern? pattern;
+    private ApplicationUser? user;
+    private List<Comment>? patternComments;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
@@ -64,19 +97,22 @@ else {
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
-        pattern = await context.Patterns.Include(p => p.Author).Include(p => p.Comments).ThenInclude(c => c.Author).FirstOrDefaultAsync(m => m.Id == Id);
+        pattern = await context.Patterns.Include(p => p.Author).FirstOrDefaultAsync(m => m.Id == Id);
+        var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (claims is not null)
+            user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();
 
         if (pattern is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
+        patternComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
     }
 
     private async Task AddComment()
     {
         // using var context = DbFactory.CreateDbContext();
-        var username = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
-        var user = await context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
+        if (user is null) return;
         Comment.Author = user;
         Comment.AuthorId = user.Id;
         Comment.CraftObject = pattern;
@@ -84,6 +120,7 @@ else {
         Comment.CreationDate = DateTime.Now;
         context.Comments.Add(Comment);
         await context.SaveChangesAsync();
+        patternComments.Add(Comment);
         NavigationManager.NavigateTo("/patterns/details?id=" + pattern.Id);
     }
 }

@@ -6,5 +6,6 @@
         public string Type { get; set; }
         public string Brand { get; set; }
         public int Size { get; set; }
+        public ICollection<Pattern> Patterns { get; set; }
     }
 }

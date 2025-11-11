@@ -4,6 +4,7 @@ using ArtsAndCrafts.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ArtsAndCrafts.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251110200659_AddManyToManyPattern")]
+    partial class AddManyToManyPattern
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -488,7 +491,7 @@ namespace ArtsAndCrafts.Migrations
                         .HasForeignKey("AuthorId");
 
                     b.HasOne("ArtsAndCrafts.Models.CraftObject", "CraftObject")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("CraftObjectId");
 
                     b.Navigation("Author");
@@ -668,6 +671,11 @@ namespace ArtsAndCrafts.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("CreatedPatterns");
+                });
+
+            modelBuilder.Entity("ArtsAndCrafts.Models.CraftObject", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

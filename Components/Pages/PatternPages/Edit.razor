@@ -1,8 +1,11 @@
 ﻿@page "/patterns/edit"
+@attribute [Authorize]
+@using ArtsAndCrafts.Data
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
 
 <PageTitle>Edit</PageTitle>
 
@@ -22,6 +25,9 @@ else
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Pattern.Id" value="@Pattern.Id" />
+                <input type="hidden" name="Pattern.AuthorId" value="@Pattern.AuthorId" />
+                <input type="hidden" name="Pattern.CreationDate" value="@Pattern.CreationDate" />
+                <input type="hidden" name="Pattern.LastEditDate" value="@Pattern.LastEditDate" />
                 <div class="mb-3">
                     <label for="name" class="form-label">Name:</label>
                     <InputText id="name" @bind-Value="Pattern.Name" class="form-control" />
@@ -54,10 +60,21 @@ else
     [SupplyParameterFromForm]
     private Pattern? Pattern { get; set; }
 
+    private ApplicationDbContext? context;
+
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        context ??= DbFactory.CreateDbContext();
         Pattern ??= await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+        var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (claims is not null)
+        {
+            var user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();
+            if (user.Id != Pattern.AuthorId)
+            {
+                NavigationManager.NavigateTo("/patterns/details?id=" + Pattern.Id);
+            }
+        }
 
         if (Pattern is null)
         {
@@ -69,7 +86,7 @@ else
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdatePattern()
     {
-        using var context = DbFactory.CreateDbContext();
+        context ??= DbFactory.CreateDbContext();
         var editedPattern = await context.Patterns.FindAsync(Id);
         if (editedPattern is null)
         {
@@ -83,6 +100,6 @@ else
 
         await context.SaveChangesAsync();
 
-        NavigationManager.NavigateTo("/patterns");
+        NavigationManager.NavigateTo("/patterns/details?id=" + Pattern.Id);
     }
 }

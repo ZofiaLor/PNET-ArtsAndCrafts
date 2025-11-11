@@ -6,5 +6,6 @@
         public string Color { get; set; }
         public string Brand { get; set; }
         public int Weight { get; set; }
+        public ICollection<Pattern> Patterns { get; set; }
     }
 }

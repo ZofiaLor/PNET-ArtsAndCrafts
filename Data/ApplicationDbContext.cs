@@ -21,11 +21,12 @@ namespace ArtsAndCrafts.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<Comment>().HasOne(x => x.CraftObject).WithMany(x => x.Comments).HasForeignKey(x => x.CraftObjectId).OnDelete(DeleteBehavior.ClientSetNull);
+            builder.Entity<Comment>().HasOne(x => x.CraftObject);
             builder.Entity<Comment>().HasOne(x => x.Author).WithMany(x => x.Comments).HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.ClientSetNull);
             //builder.Entity<CraftObject>().HasMany(x => x.Comments).WithOne(x => x.CraftObject).OnDelete(DeleteBehavior.ClientSetNull);
             builder.Entity<CraftObject>();
-            builder.Entity<Pattern>();
+            builder.Entity<Pattern>().HasMany(x => x.Yarns).WithMany(x => x.Patterns);
+            builder.Entity<Pattern>().HasMany(x => x.Tools).WithMany(x => x.Patterns);
             builder.Entity<PatternUser>().HasKey(q => new { q.PatternId, q.UserId });
             builder.Entity<PatternUser>().HasOne(x => x.User).WithMany(x => x.BookmarkedPatterns).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.ClientSetNull);
             builder.Entity<Tag>();

@@ -6,12 +6,19 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Patterns</PageTitle>
 
-<h1>Index</h1>
+<h1>Patterns</h1>
 
 <p>
-    <a href="patterns/create">Create New</a>
+    <AuthorizeView>
+        <Authorized>
+            <a href="patterns/create">Create New</a>
+        </Authorized>
+        <NotAuthorized>
+            <p>Log in to create your own patterns</p>
+        </NotAuthorized>
+    </AuthorizeView>
 </p>
 
 <QuickGrid Class="table" Items="context.Patterns.Include(p => p.Author)">
@@ -20,9 +27,7 @@
     <PropertyColumn Property="pattern => pattern.Author.UserName" />
 
     <TemplateColumn Context="pattern">
-        <a href="@($"patterns/edit?id={pattern.Id}")">Edit</a> |
-        <a href="@($"patterns/details?id={pattern.Id}")">Details</a> |
-        <a href="@($"patterns/delete?id={pattern.Id}")">Delete</a>
+        <a href="@($"patterns/details?id={pattern.Id}")">View pattern</a>
     </TemplateColumn>
 </QuickGrid>
 

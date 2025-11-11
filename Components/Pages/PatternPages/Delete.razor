@@ -1,8 +1,10 @@
 ﻿@page "/patterns/delete"
+@attribute [Authorize]
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
 
 <PageTitle>Delete</PageTitle>
 
@@ -49,6 +51,16 @@
     {
         using var context = DbFactory.CreateDbContext();
         pattern = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+
+        var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (claims is not null)
+        {
+            var user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();
+            if (user.Id != pattern.AuthorId)
+            {
+                NavigationManager.NavigateTo("/patterns/details?id=" + pattern.Id);
+            }
+        }
 
         if (pattern is null)
         {
