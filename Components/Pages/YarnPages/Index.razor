@@ -15,7 +15,25 @@
     <a href="yarns/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Yarns">
+<div>
+    <form action="/yarns" data-enhance>
+        <label for="nameSearch">Name</label>
+        <input type="search" name="nameFilter" id="nameSearch" />
+        <label for="materialSearch">Material</label>
+        <input type="search" name="materialFilter" id="materialSearch" />
+        <label for="colorSearch">Color</label>
+        <input type="search" name="colorFilter" id="colorSearch" />
+        <label for="brandSearch">Brand</label>
+        <input type="search" name="brandFilter" id="brandSearch" />
+        <label for="weightSearch">Weight</label>
+        <input type="search" name="weightFilter" id="weightSearch" pattern="\d*" />
+        <input type="submit" class="btn btn-info" value="Search" />
+        <input type="reset" class="btn btn-warning" value="Clear filters">
+    </form>
+</div>
+
+
+<QuickGrid Class="table" Items="filteredYarns" Pagination="pagination">
     <PropertyColumn Property="yarn => yarn.Name" Sortable="true" />
     <PropertyColumn Property="yarn => yarn.Material" />
     <PropertyColumn Property="yarn => yarn.Color" />
@@ -28,9 +46,26 @@
         <a href="@($"yarns/delete?id={yarn.Id}")">Delete</a>
     </TemplateColumn>
 </QuickGrid>
+<Paginator State="pagination" />
 
 @code {
     private ApplicationDbContext context = default!;
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+
+    [SupplyParameterFromQuery]
+    private string? NameFilter { get; set; }
+    [SupplyParameterFromQuery]
+    private string? MaterialFilter { get; set; }
+    [SupplyParameterFromQuery]
+    private string? ColorFilter { get; set; }
+    [SupplyParameterFromQuery]
+    private string? BrandFilter { get; set; }
+    [SupplyParameterFromQuery]
+    private int? WeightFilter { get; set; }
+
+    private IQueryable<Yarn> filteredYarns =>
+    context.Yarns.Where(y => y.Name.Contains(NameFilter ?? string.Empty) && y.Material.Contains(MaterialFilter ?? string.Empty) && y.Color.Contains(ColorFilter ?? string.Empty) && y.Brand.Contains(BrandFilter ?? string.Empty) && y.Weight.Equals(WeightFilter ?? y.Weight));
 
     protected override void OnInitialized()
     {

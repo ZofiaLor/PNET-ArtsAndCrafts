@@ -14,7 +14,7 @@
 
 <h2>Pattern</h2>
 <hr />
-@if (Pattern is null || yarnList is null)
+@if (Pattern is null || filteredYarns is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -46,21 +46,36 @@ else
                 </div>
                 <div class="mb-3">
                     Add yarn to pattern:
-                    @foreach (var yarn in yarnList)
+                    <div class="card card-body" style="max-height: 200px; overflow: auto;">
+                    <input type="search" @bind="yarnFilter" @bind:event="oninput" />
+                    <ul class="list-group list-group-flush">
+                    @foreach (var yarn in filteredYarns)
                     {
                         @if (Pattern.Yarns.Contains(yarn))
                         {
-                            <div>
-                                @yarn.Name <button type="button" class="btn btn-outline-danger" @onclick="@(e => removeYarn(yarn))">Remove from pattern</button>
-                            </div>
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-danger" @onclick="@(e => removeYarn(yarn))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
+                            </li>
                         }
                         else
                         {
-                            <div>
-                                @yarn.Name <button type="button" class="btn btn-outline-success" @onclick="@(e => addYarn(yarn))">Add to pattern</button>
-                            </div>
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-success" @onclick="@(e => addYarn(yarn))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
+                            </li>
                         }
                     }
+                        </ul>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -83,11 +98,15 @@ else
     private ApplicationDbContext? context;
     private List<Yarn>? yarnList;
 
+    private string yarnFilter = string.Empty;
+    private IEnumerable<Yarn>? filteredYarns;
+
     protected override async Task OnInitializedAsync()
     {
         context ??= DbFactory.CreateDbContext();
         Pattern ??= await context.Patterns.Include(p => p.Yarns).FirstOrDefaultAsync(m => m.Id == Id);
         yarnList ??= await context.Yarns.ToListAsync();
+        filteredYarns ??= yarnList.Where(y => y.Name.Contains(yarnFilter));
         var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
         if (claims is not null)
         {

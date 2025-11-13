@@ -19,10 +19,10 @@ else {
     <h2>@pattern.Name</h2>
     <h6><i>by @pattern.Author.UserName</i></h6>
     <div>Type: @pattern.Type</div>
-    <div>Yarn used: 
+    <div>Yarn used:
         @foreach(var yarn in pattern.Yarns)
         {
-            <a href="@($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
+            <a href="@($"yarns/details?id={yarn.Id}")">@yarn.Name</a> @(" ")
         }
     </div>
     <hr />
