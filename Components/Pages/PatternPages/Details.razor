@@ -25,6 +25,14 @@ else {
             <a href="@($"yarns/details?id={yarn.Id}")">@yarn.Name</a> @(" ")
         }
     </div>
+    <div>
+        Tools used:
+        @foreach (var tool in pattern.Tools)
+        {
+            <a href="@($"tools/details?id={tool.Id}")">@tool.Name</a> 
+            @(" ")
+        }
+    </div>
     <hr />
     <div class="card">
         <div class="card-body" style="white-space: pre-wrap">@pattern.Content</div>
@@ -103,7 +111,7 @@ else {
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
-        pattern = await context.Patterns.Include(p => p.Author).Include(p => p.Yarns).FirstOrDefaultAsync(m => m.Id == Id);
+        pattern = await context.Patterns.Include(p => p.Author).Include(p => p.Yarns).Include(p => p.Tools).FirstOrDefaultAsync(m => m.Id == Id);
         var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
         if (claims is not null)
             user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();

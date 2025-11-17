@@ -1,4 +1,4 @@
-﻿@page "/yarns/details"
+﻿@page "/tools/details"
 @rendermode InteractiveServer
 @using ArtsAndCrafts.Data
 @using Microsoft.EntityFrameworkCore
@@ -10,30 +10,32 @@
 <PageTitle>Details</PageTitle>
 
 <div>
-    @if (yarn is null || Comment is null)
+    @if (tool is null)
     {
         <p><em>Loading...</em></p>
     }
-    else {
-        <h2>@yarn.Name</h2>
+    else
+    {
+        <h2>@tool.Name</h2>
         <hr />
         <dl class="row">
             <dt class="col-sm-2">Material</dt>
-            <dd class="col-sm-10">@yarn.Material</dd>
-            <dt class="col-sm-2">Color</dt>
-            <dd class="col-sm-10">@yarn.Color</dd>
+            <dd class="col-sm-10">@tool.Material</dd>
+            <dt class="col-sm-2">Type</dt>
+            <dd class="col-sm-10">@tool.Type</dd>
             <dt class="col-sm-2">Brand</dt>
-            <dd class="col-sm-10">@yarn.Brand</dd>
-            <dt class="col-sm-2">Weight</dt>
-            <dd class="col-sm-10">@yarn.Weight</dd>
+            <dd class="col-sm-10">@tool.Brand</dd>
+            <dt class="col-sm-2">Size</dt>
+            <dd class="col-sm-10">@tool.Size</dd>
         </dl>
         <div>
-            <a href="@($"/yarns/edit?id={yarn.Id}")">Edit</a> |
-            <a href="@($"/yarns")">Back to List</a>
+            <a href="@($"/tools/edit?id={tool.Id}")">Edit</a> |
+            <a href="@($"/tools")">Back to List</a>
         </div>
+
         <h2>Comments</h2>
         <hr />
-        @foreach (var c in yarnComments)
+        @foreach (var c in toolComments)
         {
             @if (user is not null && c.AuthorId == user.Id)
             {
@@ -72,9 +74,9 @@
 </div>
 
 @code {
-    private Yarn? yarn;
+    private Tool? tool;
     private ApplicationUser? user;
-    private List<Comment>? yarnComments;
+    private List<Comment>? toolComments;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
@@ -86,16 +88,16 @@
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
-        yarn = await context.Yarns.FirstOrDefaultAsync(m => m.Id == Id);
+        tool = await context.Tools.FirstOrDefaultAsync(m => m.Id == Id);
         var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
         if (claims is not null)
             user = await context.Users.Where(u => u.UserName == claims.Name).FirstOrDefaultAsync();
 
-        if (yarn is null)
+        if (tool is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
-        yarnComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == yarn.Id).ToListAsync();
+        toolComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == tool.Id).ToListAsync();
     }
 
     private async Task AddComment()
@@ -103,12 +105,12 @@
         if (user is null) return;
         Comment.Author = user;
         Comment.AuthorId = user.Id;
-        Comment.CraftObject = yarn;
-        Comment.CraftObjectId = yarn.Id;
+        Comment.CraftObject = tool;
+        Comment.CraftObjectId = tool.Id;
         Comment.CreationDate = DateTime.Now;
         context.Comments.Add(Comment);
         await context.SaveChangesAsync();
-        yarnComments.Add(Comment);
-        NavigationManager.NavigateTo("/yarns/details?id=" + yarn.Id);
+        toolComments.Add(Comment);
+        NavigationManager.NavigateTo("/tools/details?id=" + tool.Id);
     }
 }

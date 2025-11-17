@@ -1,4 +1,4 @@
-﻿@page "/yarns/delete"
+﻿@page "/tools/delete"
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
@@ -10,42 +10,42 @@
 
 <p>Are you sure you want to delete this?</p>
 <div>
-    <h2>Yarn</h2>
+    <h2>Tool</h2>
     <hr />
-    @if (yarn is null)
+    @if (tool is null)
     {
         <p><em>Loading...</em></p>
     }
     else {
         <dl class="row">
             <dt class="col-sm-2">Name</dt>
-            <dd class="col-sm-10">@yarn.Name</dd>
+            <dd class="col-sm-10">@tool.Name</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Material</dt>
-            <dd class="col-sm-10">@yarn.Material</dd>
+            <dd class="col-sm-10">@tool.Material</dd>
         </dl>
         <dl class="row">
-            <dt class="col-sm-2">Color</dt>
-            <dd class="col-sm-10">@yarn.Color</dd>
+            <dt class="col-sm-2">Type</dt>
+            <dd class="col-sm-10">@tool.Type</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Brand</dt>
-            <dd class="col-sm-10">@yarn.Brand</dd>
+            <dd class="col-sm-10">@tool.Brand</dd>
         </dl>
         <dl class="row">
-            <dt class="col-sm-2">Weight</dt>
-            <dd class="col-sm-10">@yarn.Weight</dd>
+            <dt class="col-sm-2">Size</dt>
+            <dd class="col-sm-10">@tool.Size</dd>
         </dl>
-        <EditForm method="post" Model="yarn" OnValidSubmit="DeleteYarn" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(yarn is null)">Delete</button> |
-            <a href="/yarns">Back to List</a>
+        <EditForm method="post" Model="tool" OnValidSubmit="DeleteTool" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(tool is null)">Delete</button> |
+            <a href="/tools">Back to List</a>
         </EditForm>
     }
 </div>
 
 @code {
-    private Yarn? yarn;
+    private Tool? tool;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
@@ -53,19 +53,19 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        yarn = await context.Yarns.FirstOrDefaultAsync(m => m.Id == Id);
+        tool = await context.Tools.FirstOrDefaultAsync(m => m.Id == Id);
 
-        if (yarn is null)
+        if (tool is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
     }
 
-    private async Task DeleteYarn()
+    private async Task DeleteTool()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Yarns.Remove(yarn!);
+        context.Tools.Remove(tool!);
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/yarns");
+        NavigationManager.NavigateTo("/tools");
     }
 }
