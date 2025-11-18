@@ -31,6 +31,25 @@
             <a href="@($"/yarns/edit?id={yarn.Id}")">Edit</a> |
             <a href="@($"/yarns")">Back to List</a>
         </div>
+        @if (user is not null)
+        {
+            @if (yarnUser is null)
+            {
+                <button type="button" class="btn btn-warning" @onclick="@(e => addBookmark())">Add to bookmarks</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" @onclick="@(e => deleteBookmark())">Remove from bookmarks</button>
+                @if (!isOwned)
+                {
+                    <button type="button" class="btn btn-success" @onclick="@(e => changeIsOwned(true))">Mark as owned</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => changeIsOwned(false))">Mark as not owned</button>
+                }
+            }
+        }
         <h2>Comments</h2>
         <hr />
         @foreach (var c in yarnComments)
@@ -74,12 +93,15 @@
 @code {
     private Yarn? yarn;
     private ApplicationUser? user;
+    private YarnUser? yarnUser;
     private List<Comment>? yarnComments;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
     [SupplyParameterFromForm]
     private Comment Comment { get; set; } = new();
+
+    private bool isOwned;
 
     private ApplicationDbContext? context;
 
@@ -110,5 +132,40 @@
         await context.SaveChangesAsync();
         yarnComments.Add(Comment);
         NavigationManager.NavigateTo("/yarns/details?id=" + yarn.Id);
+    }
+
+    private async Task addBookmark()
+    {
+        if (yarnUser is null)
+        {
+            yarnUser = new YarnUser();
+            yarnUser.Yarn = yarn;
+            yarnUser.YarnId = yarn.Id;
+            yarnUser.User = user;
+            yarnUser.UserId = user.Id;
+            context.YarnUsers.Add(yarnUser);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    private async Task deleteBookmark()
+    {
+        if (yarnUser is not null)
+        {
+            context.YarnUsers.Remove(yarnUser);
+            await context.SaveChangesAsync();
+            yarnUser = null;
+            isOwned = false;
+        }
+    }
+
+    private async Task changeIsOwned(bool value)
+    {
+        if (yarnUser is not null)
+        {
+            yarnUser.IsOwned = value;
+            await context.SaveChangesAsync();
+            isOwned = value;
+        }
     }
 }

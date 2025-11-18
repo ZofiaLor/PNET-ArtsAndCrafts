@@ -32,6 +32,25 @@
             <a href="@($"/tools/edit?id={tool.Id}")">Edit</a> |
             <a href="@($"/tools")">Back to List</a>
         </div>
+        @if (user is not null)
+        {
+            @if (toolUser is null)
+            {
+                <button type="button" class="btn btn-warning" @onclick="@(e => addBookmark())">Add to bookmarks</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" @onclick="@(e => deleteBookmark())">Remove from bookmarks</button>
+                @if (!isOwned)
+                {
+                    <button type="button" class="btn btn-success" @onclick="@(e => changeIsOwned(true))">Mark as owned</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => changeIsOwned(false))">Mark as not owned</button>
+                }
+            }
+        }
 
         <h2>Comments</h2>
         <hr />
@@ -76,12 +95,15 @@
 @code {
     private Tool? tool;
     private ApplicationUser? user;
+    private ToolUser? toolUser;
     private List<Comment>? toolComments;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
     [SupplyParameterFromForm]
     private Comment Comment { get; set; } = new();
+
+    private bool isOwned = false;
 
     private ApplicationDbContext? context;
 
@@ -98,6 +120,14 @@
             NavigationManager.NavigateTo("notfound");
         }
         toolComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == tool.Id).ToListAsync();
+        if (user is not null)
+        {
+            toolUser = await context.ToolUsers.FirstOrDefaultAsync(t => t.ToolId == tool.Id && t.UserId == user.Id);
+            if (toolUser is not null)
+            {
+                isOwned = toolUser.IsOwned;
+            }
+        }
     }
 
     private async Task AddComment()
@@ -112,5 +142,40 @@
         await context.SaveChangesAsync();
         toolComments.Add(Comment);
         NavigationManager.NavigateTo("/tools/details?id=" + tool.Id);
+    }
+
+    private async Task addBookmark()
+    {
+        if (toolUser is null)
+        {
+            toolUser = new ToolUser();
+            toolUser.Tool = tool;
+            toolUser.ToolId = tool.Id;
+            toolUser.User = user;
+            toolUser.UserId = user.Id;
+            context.ToolUsers.Add(toolUser);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    private async Task deleteBookmark()
+    {
+        if (toolUser is not null)
+        {
+            context.ToolUsers.Remove(toolUser);
+            await context.SaveChangesAsync();
+            toolUser = null;
+            isOwned = false;
+        }
+    }
+
+    private async Task changeIsOwned(bool value)
+    {
+        if (toolUser is not null)
+        {
+            toolUser.IsOwned = value;
+            await context.SaveChangesAsync();
+            isOwned = value;
+        }
     }
 }

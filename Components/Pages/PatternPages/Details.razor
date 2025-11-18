@@ -37,15 +37,45 @@ else {
     <div class="card">
         <div class="card-body" style="white-space: pre-wrap">@pattern.Content</div>
     </div>
-    @if (user is not null && pattern.AuthorId == user.Id)
+    <div>@likes likes</div>
+    @if (user is not null)
     {
-        <div>
-            <a href="@($"/patterns/edit?id={pattern.Id}")">Edit</a> |
-            <a href="@($"/patterns/delete?id={pattern.Id}")">Delete</a> |
-            <a href="@($"/patterns")">Back to List</a>
-        </div>
+        @if (pattern.AuthorId == user.Id)
+        {
+            <div>
+                <a href="@($"/patterns/edit?id={pattern.Id}")">Edit</a> |
+                <a href="@($"/patterns/delete?id={pattern.Id}")">Delete</a> |
+                <a href="@($"/patterns")">Back to List</a>
+            </div>
+        }
+        else
+        {
+            @if (!isSaved)
+            {
+                <button type="button" class="btn btn-warning" @onclick="@(e => changeIsSaved(true))">Add to bookmarks</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" @onclick="@(e => changeIsSaved(false))">Remove from bookmarks</button>
+            }
+            @if (!isLiked)
+            {
+                <button type="button" class="btn btn-info" @onclick="@(e => changeIsLiked(true))">Like</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" @onclick="@(e => changeIsLiked(false))">Unlike</button>
+            }
+            @if (!isDone)
+            {
+                <button type="button" class="btn btn-success" @onclick="@(e => changeIsDone(true))">Mark as done</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" @onclick="@(e => changeIsDone(false))">Mark as undone</button>
+            }
+        }
     }
-
     <h2>Comments</h2>
     <hr />
     @foreach (var c in patternComments)
@@ -98,6 +128,7 @@ else {
 @code {
     private Pattern? pattern;
     private ApplicationUser? user;
+    private PatternUser? patternUser;
     private List<Comment>? patternComments;
 
     [SupplyParameterFromQuery]
@@ -105,6 +136,12 @@ else {
 
     [SupplyParameterFromForm]
     private Comment Comment { get; set; } = new();
+
+    private bool isSaved = false;
+    private bool isLiked = false;
+    private bool isDone = false;
+
+    private int likes = 0;
 
     private ApplicationDbContext? context;
 
@@ -120,7 +157,18 @@ else {
         {
             NavigationManager.NavigateTo("notfound");
         }
+        likes = context.PatternUsers.Where(p => p.PatternId == pattern.Id && p.IsLiked).Count();
         patternComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+        if (user is not null && user.Id != pattern.AuthorId)
+        {
+            patternUser = await context.PatternUsers.FirstOrDefaultAsync(p => p.PatternId == pattern.Id && p.UserId == user.Id);
+            if (patternUser is not null)
+            {
+                isSaved = patternUser.IsSaved;
+                isLiked = patternUser.IsLiked;
+                isDone = patternUser.IsDone;
+            }
+        }
     }
 
     private async Task AddComment()
@@ -136,5 +184,43 @@ else {
         await context.SaveChangesAsync();
         patternComments.Add(Comment);
         NavigationManager.NavigateTo("/patterns/details?id=" + pattern.Id);
+    }
+
+    private void createPatternUserIfNull()
+    {
+        if (patternUser is null)
+        {
+            patternUser = new PatternUser();
+            patternUser.Pattern = pattern;
+            patternUser.PatternId = pattern.Id;
+            patternUser.User = user;
+            patternUser.UserId = user.Id;
+            context.PatternUsers.Add(patternUser);
+        }
+    }
+
+    private async Task changeIsSaved(bool value)
+    {
+        createPatternUserIfNull();
+        patternUser.IsSaved = value;
+        await context.SaveChangesAsync();
+        isSaved = value;
+    }
+
+    private async Task changeIsLiked(bool value)
+    {
+        createPatternUserIfNull();
+        patternUser.IsLiked = value;
+        await context.SaveChangesAsync();
+        isLiked = value;
+        likes = context.PatternUsers.Where(p => p.PatternId == pattern.Id && p.IsLiked).Count();
+    }
+
+    private async Task changeIsDone(bool value)
+    {
+        createPatternUserIfNull();
+        patternUser.IsDone = value;
+        await context.SaveChangesAsync();
+        isDone = value;
     }
 }

@@ -1,0 +1,52 @@
+﻿@page "/mypatterns"
+@attribute [Authorize]
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using ArtsAndCrafts.Data
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
+
+<PageTitle>My Patterns</PageTitle>
+
+<h3>MyPatterns</h3> <hr />
+
+@if (user is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <a href="patterns/create" role="button" class="btn btn-success">Create a new pattern!</a>
+    <br />
+    <br />
+    @if (user.CreatedPatterns.Count == 0)
+    {
+        <div>You haven't created any patterns yet'</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var pattern in user.CreatedPatterns)
+            {
+                <a href="@($"patterns/details?id={pattern.Id}")" class="list-group-item list-group-item-action">@pattern.Name</a>
+            }
+        </div>
+    }
+}
+
+
+@code {
+    private ApplicationUser user = default!;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        var username = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        user = await context.Users.Include(u => u.CreatedPatterns).Where(u => u.UserName == username).FirstOrDefaultAsync();
+    }
+}

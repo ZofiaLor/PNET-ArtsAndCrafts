@@ -4,6 +4,7 @@ namespace ArtsAndCrafts.Models
 {
     public class PatternUser
     {
+        public bool IsSaved {  get; set; }
         public bool IsDone { get; set; }
         public bool IsLiked { get; set; }
         public int PatternId { get; set; }

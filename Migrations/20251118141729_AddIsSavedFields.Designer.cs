@@ -4,6 +4,7 @@ using ArtsAndCrafts.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ArtsAndCrafts.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118141729_AddIsSavedFields")]
+    partial class AddIsSavedFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,6 +198,9 @@ namespace ArtsAndCrafts.Migrations
                     b.Property<bool>("IsOwned")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsSaved")
+                        .HasColumnType("bit");
+
                     b.HasKey("ToolId", "UserId");
 
                     b.HasIndex("UserId");
@@ -211,6 +217,9 @@ namespace ArtsAndCrafts.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("IsOwned")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSaved")
                         .HasColumnType("bit");
 
                     b.HasKey("YarnId", "UserId");
