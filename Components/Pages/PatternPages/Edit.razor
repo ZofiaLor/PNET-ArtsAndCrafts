@@ -7,6 +7,7 @@
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject IWebHostEnvironment Environment
 
 <PageTitle>Edit</PageTitle>
 
@@ -111,6 +112,10 @@ else
                         </ul>
                     </div>
                 </div>
+
+                <div class="mb-3">
+                    <InputFile OnChange="LoadFiles" multiple />
+                </div>
                 
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -201,5 +206,36 @@ else
     private void removeTool(Tool tool)
     {
         Pattern.Tools.Remove(tool);
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+
+        foreach (var file in e.GetMultipleFiles(5))
+        {
+            try
+            {
+                var trustedFileName = Path.GetRandomFileName().Split(".")[0] + Path.GetExtension(file.Name);
+                var path = Path.Combine("images",
+                    trustedFileName);
+
+                await using FileStream fs = new(path, FileMode.Create);
+                await file.OpenReadStream(1024*1024).CopyToAsync(fs);
+
+                var picture = new Picture();
+                picture.Path = path;
+                picture.Name = Path.GetFileNameWithoutExtension(file.Name);
+                picture.PatternId = Pattern.Id;
+                picture.Pattern = Pattern;
+                context.Pictures.Add(picture);
+                await context.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
+
     }
 }

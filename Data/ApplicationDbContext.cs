@@ -11,6 +11,7 @@ namespace ArtsAndCrafts.Data
         public DbSet<CraftObject> CraftObjects { get; set; }
         public DbSet<Pattern> Patterns { get; set; }
         public DbSet<PatternUser> PatternUsers { get; set; }
+        public DbSet<Picture> Pictures { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<Tool> Tools { get; set; }
         public DbSet<ToolUser> ToolUsers { get; set; }
@@ -29,6 +30,7 @@ namespace ArtsAndCrafts.Data
             builder.Entity<Pattern>().HasMany(x => x.Tools).WithMany(x => x.Patterns);
             builder.Entity<PatternUser>().HasKey(q => new { q.PatternId, q.UserId });
             builder.Entity<PatternUser>().HasOne(x => x.User).WithMany(x => x.BookmarkedPatterns).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.ClientSetNull);
+            builder.Entity<Picture>().HasOne(x => x.Pattern).WithMany(x => x.Pictures).HasForeignKey(x => x.PatternId);
             builder.Entity<Tag>().HasMany(x => x.Patterns).WithMany(x => x.Tags);
             builder.Entity<Tool>();
             builder.Entity<ToolUser>().HasKey(q => new {q.ToolId, q.UserId});

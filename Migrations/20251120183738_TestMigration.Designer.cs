@@ -4,6 +4,7 @@ using ArtsAndCrafts.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ArtsAndCrafts.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251120183738_TestMigration")]
+    partial class TestMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -165,35 +168,6 @@ namespace ArtsAndCrafts.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PatternUsers");
-                });
-
-            modelBuilder.Entity("ArtsAndCrafts.Models.Picture", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PatternId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatternId");
-
-                    b.ToTable("Pictures");
                 });
 
             modelBuilder.Entity("ArtsAndCrafts.Models.Tag", b =>
@@ -546,17 +520,6 @@ namespace ArtsAndCrafts.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ArtsAndCrafts.Models.Picture", b =>
-                {
-                    b.HasOne("ArtsAndCrafts.Models.Pattern", "Pattern")
-                        .WithMany("Pictures")
-                        .HasForeignKey("PatternId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Pattern");
-                });
-
             modelBuilder.Entity("ArtsAndCrafts.Models.ToolUser", b =>
                 {
                     b.HasOne("ArtsAndCrafts.Models.Tool", "Tool")
@@ -711,11 +674,6 @@ namespace ArtsAndCrafts.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("CreatedPatterns");
-                });
-
-            modelBuilder.Entity("ArtsAndCrafts.Models.Pattern", b =>
-                {
-                    b.Navigation("Pictures");
                 });
 #pragma warning restore 612, 618
         }
