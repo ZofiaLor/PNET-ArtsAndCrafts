@@ -6,6 +6,7 @@
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject IJSRuntime JsRuntime
 
 <PageTitle>Details</PageTitle>
 
@@ -92,7 +93,8 @@ else {
         {
             <div class="card border-info card-body">
                 You commented on @c.CreationDate <hr />
-                <div style="white-space: pre-wrap">@c.Content</div>
+                <div style="white-space: pre-wrap">@c.Content</div> <hr />
+                <div> <button type="button" class="btn btn-outline-danger" @onclick="@(e => DeleteComment(c))">Delete comment</button></div>
             </div>
         }
         else
@@ -110,6 +112,7 @@ else {
                 <div style="white-space: pre-wrap">@c.Content</div>
             </div>
         }
+        <br />
 
     }
 
@@ -192,6 +195,17 @@ else {
         await context.SaveChangesAsync();
         patternComments.Add(Comment);
         NavigationManager.NavigateTo("/patterns/details?id=" + pattern.Id);
+    }
+
+    private async Task DeleteComment(Comment comment)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this comment?");
+        if (confirmed)
+        {
+            patternComments.Remove(comment);
+            context.Comments.Remove(comment);
+            await context.SaveChangesAsync();
+        }
     }
 
     private void createPatternUserIfNull()
