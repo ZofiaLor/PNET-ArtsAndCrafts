@@ -7,7 +7,7 @@
         public string Path { get; set; }
         public int? Order { get; set; }
 
-        public int PatternId { get; set; }
-        public Pattern Pattern { get; set; }
+        public int CraftObjectId { get; set; }
+        public CraftObject CraftObject { get; set; }
     }
 }

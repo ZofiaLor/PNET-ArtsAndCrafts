@@ -15,7 +15,7 @@
 
 <h2>Pattern</h2>
 <hr />
-@if (Pattern is null || filteredYarns is null)
+@if (Pattern is null || filteredYarns is null || filteredTools is null || pictureList is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -115,6 +115,23 @@ else
 
                 <div class="mb-3">
                     <InputFile OnChange="LoadFiles" multiple />
+                    <ul class="list-group">
+                        @foreach(var picture in pictureList)
+                        {
+                            <li class="list-group-item flex-fill">
+                                <img src="@picture.Path" style="max-height: 20px; max-width: auto;" />
+                                <input type="text" @bind="picture.Name" />
+                                @if (picturesToDelete.Contains(picture))
+                                {
+                                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Remove(picture))">Restore</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Add(picture))">Delete</button>
+                                }
+                            </li>
+                        }
+                    </ul>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -137,6 +154,8 @@ else
     private ApplicationDbContext? context;
     private List<Yarn>? yarnList;
     private List<Tool>? toolList;
+    private IEnumerable<Picture>? pictureList;
+    private List<Picture> picturesToDelete = new List<Picture>();
 
     private string yarnFilter = string.Empty;
     private IEnumerable<Yarn>? filteredYarns;
@@ -165,6 +184,7 @@ else
         {
             NavigationManager.NavigateTo("notfound");
         }
+        pictureList ??= await context.Pictures.Where(x => x.CraftObjectId == Id).ToListAsync();
     }
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -182,6 +202,13 @@ else
         editedPattern.Content = Pattern.Content;
         editedPattern.Type = Pattern.Type;
         editedPattern.LastEditDate = DateTime.Now;
+
+        foreach(var picture in picturesToDelete)
+        {
+            string path = Path.Combine("wwwroot", picture.Path);
+            context.Pictures.Remove(picture);
+            File.Delete(path);
+        }
 
         await context.SaveChangesAsync();
 
@@ -216,17 +243,19 @@ else
             try
             {
                 var trustedFileName = Path.GetRandomFileName().Split(".")[0] + Path.GetExtension(file.Name);
-                var path = Path.Combine("images",
+                var pathForSaving = Path.Combine("wwwroot", "images",
                     trustedFileName);
+                var pathForDb = Path.Combine("images", trustedFileName);
 
-                await using FileStream fs = new(path, FileMode.Create);
+                //TODO save the file in UpdatePattern function
+                await using FileStream fs = new(pathForSaving, FileMode.Create);
                 await file.OpenReadStream(1024*1024).CopyToAsync(fs);
 
                 var picture = new Picture();
-                picture.Path = path;
+                picture.Path = pathForDb;
                 picture.Name = Path.GetFileNameWithoutExtension(file.Name);
-                picture.PatternId = Pattern.Id;
-                picture.Pattern = Pattern;
+                picture.CraftObjectId = Pattern.Id;
+                picture.CraftObject = Pattern;
                 context.Pictures.Add(picture);
                 await context.SaveChangesAsync();
 

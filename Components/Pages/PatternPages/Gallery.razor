@@ -1,0 +1,47 @@
+﻿@page "/patterns/gallery"
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+
+<h2>@name</h2>
+<h3>Gallery</h3>
+<div>
+    <a href="@($"patterns/details?id={Id}")">Back to pattern</a>
+</div>
+@if (pictures is null || pictures.Count() == 0)
+{
+    <div>No images have been added for this pattern</div>
+}
+else
+{
+    <div class="row">
+    @foreach (var picture in pictures)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                 <img src="@picture.Path" class="card-img-top" />
+                 <div class="card-body">
+                     <p class="card-text">@picture.Name</p>
+                 </div>
+            </div>
+        </div>
+        
+    }
+    </div>
+}
+
+@code {
+    List<Picture>? pictures;
+    string name = string.Empty;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        var pattern = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+        name = pattern is not null ? pattern.Name : string.Empty;
+        pictures = await context.Pictures.Where(x => x.CraftObjectId == Id).ToListAsync();
+    }
+}

@@ -30,7 +30,7 @@ namespace ArtsAndCrafts.Data
             builder.Entity<Pattern>().HasMany(x => x.Tools).WithMany(x => x.Patterns);
             builder.Entity<PatternUser>().HasKey(q => new { q.PatternId, q.UserId });
             builder.Entity<PatternUser>().HasOne(x => x.User).WithMany(x => x.BookmarkedPatterns).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.ClientSetNull);
-            builder.Entity<Picture>().HasOne(x => x.Pattern).WithMany(x => x.Pictures).HasForeignKey(x => x.PatternId);
+            builder.Entity<Picture>().HasOne(x => x.CraftObject);
             builder.Entity<Tag>().HasMany(x => x.Patterns).WithMany(x => x.Tags);
             builder.Entity<Tool>();
             builder.Entity<ToolUser>().HasKey(q => new {q.ToolId, q.UserId});
