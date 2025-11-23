@@ -6,7 +6,6 @@
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider _authenticationStateProvider
-@inject IJSRuntime JsRuntime
 
 <PageTitle>Details</PageTitle>
 
@@ -53,45 +52,7 @@
             }
         }
 
-        <h2>Comments</h2>
-        <hr />
-        @foreach (var c in toolComments)
-        {
-            @if (user is not null && c.AuthorId == user.Id)
-            {
-                <div class="card border-info card-body">
-                    You commented on @c.CreationDate <hr />
-                    <div style="white-space: pre-wrap">@c.Content</div> <hr />
-                    <div> <button type="button" class="btn btn-outline-danger" @onclick="@(e => DeleteComment(c))">Delete comment</button></div>
-                </div>
-            }
-            else
-            {
-                <div class="card card-body">
-                    <div>@c.Author.UserName commented on @c.CreationDate <hr /></div>
-                    <div style="white-space: pre-wrap">@c.Content</div>
-                </div>
-            }
-            <br />
-
-        }
-        <AuthorizeView Context="authContext">
-            <Authorized>
-                <EditForm method="post" Model="Comment" OnValidSubmit="AddComment" FormName="create" Enhance>
-                    <DataAnnotationsValidator />
-                    <ValidationSummary class="text-danger" role="alert" />
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Add new comment</label>
-                        <InputTextArea id="content" @bind-Value="Comment.Content" class="form-control" />
-                        <ValidationMessage For="() => Comment.Content" class="text-danger" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Comment</button>
-                </EditForm>
-            </Authorized>
-            <NotAuthorized>
-                <p>Log in to comment on this pattern</p>
-            </NotAuthorized>
-        </AuthorizeView>
+        <CommentInterface context="@context" user="@user" craftObject="@tool" />
     }
 </div>
 
@@ -99,12 +60,9 @@
     private Tool? tool;
     private ApplicationUser? user;
     private ToolUser? toolUser;
-    private List<Comment>? toolComments;
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
-    [SupplyParameterFromForm]
-    private Comment Comment { get; set; } = new();
 
     private bool isOwned = false;
 
@@ -122,7 +80,6 @@
         {
             NavigationManager.NavigateTo("notfound");
         }
-        toolComments = await context.Comments.Include(c => c.Author).Where(c => c.CraftObjectId == tool.Id).ToListAsync();
         if (user is not null)
         {
             toolUser = await context.ToolUsers.FirstOrDefaultAsync(t => t.ToolId == tool.Id && t.UserId == user.Id);
@@ -130,31 +87,6 @@
             {
                 isOwned = toolUser.IsOwned;
             }
-        }
-    }
-
-    private async Task AddComment()
-    {
-        if (user is null) return;
-        Comment.Author = user;
-        Comment.AuthorId = user.Id;
-        Comment.CraftObject = tool;
-        Comment.CraftObjectId = tool.Id;
-        Comment.CreationDate = DateTime.Now;
-        context.Comments.Add(Comment);
-        await context.SaveChangesAsync();
-        toolComments.Add(Comment);
-        NavigationManager.NavigateTo("/tools/details?id=" + tool.Id);
-    }
-
-    private async Task DeleteComment(Comment comment)
-    {
-        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this comment?");
-        if (confirmed)
-        {
-            toolComments.Remove(comment);
-            context.Comments.Remove(comment);
-            await context.SaveChangesAsync();
         }
     }
 
