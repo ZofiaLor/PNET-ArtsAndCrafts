@@ -113,47 +113,7 @@ else
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <InputFile OnChange="LoadFiles" multiple accept=".jpg,.png,.jpeg,.bmp" />
-                    @if (showSizeAlert)
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            At least one file exceeded the size limit of @(maxFileSizeBytes/1024)kB. Files too large are skipped.
-                        </div>
-                    }
-                    @if (showExtensionAlert)
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            At least one file is of unallowed type and was skipped. Allowed file types are: *.png, *.jpg, *.jpeg, *.bmp.
-                        </div>
-                    }
-                    <ul class="list-group">
-                        @foreach (var item in newPictures)
-                        {
-                            <li class="list-group-item flex-fill">
-                                <input type="text" @bind="item.Item1.Name" />
-                                <button type="button" class="btn btn-outline-danger" @onclick="@(e => newPictures.Remove(item))">Cancel image upload</button>
-                            </li>
-                        }
-                    </ul>
-                    <ul class="list-group">
-                        @foreach(var picture in pictureList)
-                        {
-                            <li class="list-group-item flex-fill">
-                                <img src="@picture.Path" style="max-height: 20px; max-width: auto;" />
-                                <input type="text" @bind="picture.Name" />
-                                @if (picturesToDelete.Contains(picture))
-                                {
-                                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Remove(picture))">Restore</button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Add(picture))">Delete</button>
-                                }
-                            </li>
-                        }
-                    </ul>
-                </div>
+                <PictureInterface craftObject="@Pattern" pictureList="@pictureList" newPictures="@newPictures" maxFileSizeBytes="@maxFileSizeBytes" picturesToDelete="@picturesToDelete"/>
                 
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -185,9 +145,6 @@ else
     private IEnumerable<Tool>? filteredTools;
 
     private int maxFileSizeBytes = 1024 * 1024;
-    private bool showSizeAlert = false;
-    private bool showExtensionAlert = false;
-    private List<string> allowedExtensions = new List<string> { ".jpg", ".jpeg", ".png", ".bmp" };
 
     protected override async Task OnInitializedAsync()
     {
@@ -232,14 +189,14 @@ else
 
         foreach(var item in newPictures)
         {
-            await using FileStream fs = new(Path.Combine("wwwroot", item.Item1.Path), FileMode.Create);
+            await using FileStream fs = new(Path.Combine("StaticFiles", item.Item1.Path), FileMode.Create);
             await item.Item2.OpenReadStream(maxFileSizeBytes).CopyToAsync(fs);
             context.Pictures.Add(item.Item1);
         }
 
         foreach(var picture in picturesToDelete)
         {
-            string path = Path.Combine("wwwroot", picture.Path);
+            string path = Path.Combine("StaticFiles", picture.Path);
             context.Pictures.Remove(picture);
             File.Delete(path);
         }
@@ -267,42 +224,5 @@ else
     private void removeTool(Tool tool)
     {
         Pattern.Tools.Remove(tool);
-    }
-
-    private async Task LoadFiles(InputFileChangeEventArgs e)
-    {
-        showSizeAlert = false;
-        showExtensionAlert = false;
-        foreach (var file in e.GetMultipleFiles(5))
-        {
-            try
-            {
-                if (file.Size > maxFileSizeBytes)
-                {
-                    showSizeAlert = true;
-                    continue;
-                }
-                if (!allowedExtensions.Contains(Path.GetExtension(file.Name)))
-                {
-                    showExtensionAlert = true;
-                    continue;
-                }
-                var trustedFileName = Path.GetRandomFileName().Split(".")[0] + Path.GetExtension(file.Name);
-                var pathForDb = Path.Combine("images", trustedFileName);
-
-                var picture = new Picture();
-                picture.Path = pathForDb;
-                picture.Name = Path.GetFileNameWithoutExtension(file.Name);
-                picture.CraftObjectId = Pattern.Id;
-                picture.CraftObject = Pattern;
-                newPictures.Add(Tuple.Create(picture, file));
-
-            }
-            catch (Exception ex)
-            {
-                
-            }
-        }
-
     }
 }

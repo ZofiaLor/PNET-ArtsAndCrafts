@@ -1,0 +1,105 @@
+﻿@rendermode InteractiveServer
+@using ArtsAndCrafts.Data
+@using Microsoft.EntityFrameworkCore
+@using ArtsAndCrafts.Models
+
+<div class="mb-3">
+    <InputFile OnChange="LoadFiles" multiple accept=".jpg,.png,.jpeg,.bmp" />
+    @if (showSizeAlert)
+    {
+        <div class="alert alert-danger" role="alert">
+            At least one file exceeded the size limit of @(maxFileSizeBytes / 1024)kB. Files too large are skipped.
+        </div>
+    }
+    @if (showExtensionAlert)
+    {
+        <div class="alert alert-danger" role="alert">
+            At least one file is of unallowed type and was skipped. Allowed file types are: *.png, *.jpg, *.jpeg, *.bmp.
+        </div>
+    }
+    <ul class="list-group">
+        @foreach (var item in newPictures)
+        {
+            <li class="list-group-item flex-fill">
+                <input type="text" @bind="item.Item1.Name" />
+                <button type="button" class="btn btn-outline-danger" @onclick="@(e => newPictures.Remove(item))">Cancel image upload</button>
+            </li>
+        }
+    </ul>
+    <ul class="list-group">
+        @foreach (var picture in pictureList)
+        {
+            <li class="list-group-item flex-fill">
+                <img src="@Path.Combine("static-files", picture.Path)" style="max-height: 20px; max-width: auto;" />
+                <input type="text" @bind="picture.Name" />
+                @if (picturesToDelete.Contains(picture))
+                {
+                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Remove(picture))">Restore</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Add(picture))">Delete</button>
+                }
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter]
+    public CraftObject? craftObject { get; set; } // pass in edit components, leave as null in create components
+
+    [Parameter]
+    public IEnumerable<Picture>? pictureList { get; set; }
+
+    [Parameter]
+    public List<Picture> picturesToDelete { get; set; }
+    [Parameter]
+    public List<Tuple<Picture, IBrowserFile>> newPictures { get; set; }
+
+    [Parameter]
+    public int maxFileSizeBytes { get; set; }
+    private bool showSizeAlert = false;
+    private bool showExtensionAlert = false;
+    private List<string> allowedExtensions = new List<string> { ".jpg", ".jpeg", ".png", ".bmp" };
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        showSizeAlert = false;
+        showExtensionAlert = false;
+        foreach (var file in e.GetMultipleFiles(5))
+        {
+            try
+            {
+                if (file.Size > maxFileSizeBytes)
+                {
+                    showSizeAlert = true;
+                    continue;
+                }
+                if (!allowedExtensions.Contains(Path.GetExtension(file.Name)))
+                {
+                    showExtensionAlert = true;
+                    continue;
+                }
+                var trustedFileName = Path.GetRandomFileName().Split(".")[0] + Path.GetExtension(file.Name);
+                var pathForDb = Path.Combine("images", trustedFileName);
+
+                var picture = new Picture();
+                picture.Path = pathForDb;
+                picture.Name = Path.GetFileNameWithoutExtension(file.Name);
+                if (craftObject is not null)
+                {
+                    picture.CraftObjectId = craftObject.Id;
+                    picture.CraftObject = craftObject;
+                }
+                newPictures.Add(Tuple.Create(picture, file));
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+    }
+}
