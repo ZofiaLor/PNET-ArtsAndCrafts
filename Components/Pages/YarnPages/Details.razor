@@ -16,7 +16,10 @@
     }
     else {
         <h2>@yarn.Name</h2>
-        <hr />
+    <div>
+        <a href="@($"/yarns/gallery?id={yarn.Id}")">View yarn gallery</a>
+    </div>
+    <hr />
         <dl class="row">
             <dt class="col-sm-2">Material</dt>
             <dd class="col-sm-10">@yarn.Material</dd>

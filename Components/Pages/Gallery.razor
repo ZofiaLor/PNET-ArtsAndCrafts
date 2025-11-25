@@ -1,16 +1,17 @@
-﻿@page "/patterns/gallery"
+﻿@page "/{type}/gallery"
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
 
 <h2>@name</h2>
 <h3>Gallery</h3>
 <div>
-    <a href="@($"patterns/details?id={Id}")">Back to pattern</a>
+    <a href="@($"{type}/details?id={Id}")">Back to details</a>
 </div>
 @if (pictures is null || pictures.Count() == 0)
 {
-    <div>No images have been added for this pattern</div>
+    <div>No images have been added for this element</div>
 }
 else
 {
@@ -36,12 +37,34 @@ else
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
+    [Parameter]
+    public string type { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        if (type is null || !new List<string> {"patterns", "tools", "yarns"}.Contains(type))
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
         using var context = DbFactory.CreateDbContext();
-        var pattern = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
-        name = pattern is not null ? pattern.Name : string.Empty;
+        CraftObject? craftObject;
+        if (type.Equals("patterns"))
+        {
+            craftObject = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+        }
+        else if (type.Equals("tools"))
+        {
+            craftObject = await context.Tools.FirstOrDefaultAsync(m => m.Id == Id);
+        }
+        else
+        {
+            craftObject = await context.Yarns.FirstOrDefaultAsync(m => m.Id == Id);
+        }
+        if (craftObject is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        name = craftObject.Name;
         pictures = await context.Pictures.Where(x => x.CraftObjectId == Id).ToListAsync();
     }
 }

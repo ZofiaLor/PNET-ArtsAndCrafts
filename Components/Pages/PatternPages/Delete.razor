@@ -25,13 +25,20 @@
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Content</dt>
-            @if (pattern.Content.Length > 100)
+            @if (pattern.Content is not null)
             {
-                <dd class="col-sm-10">@pattern.Content.Substring(0, 100) ...</dd>
+                @if (pattern.Content.Length > 100)
+                {
+                    <dd class="col-sm-10">@pattern.Content.Substring(0, 100) ...</dd>
+                }
+                else
+                {
+                    <dd class="col-sm-10">@pattern.Content</dd>
+                }
             }
             else
             {
-                <dd class="col-sm-10">@pattern.Content</dd>
+                <dd><i>no content</i></dd>
             }
         </dl>
         <EditForm method="post" Model="pattern" OnValidSubmit="DeletePattern" FormName="delete" Enhance>
@@ -71,6 +78,18 @@
     private async Task DeletePattern()
     {
         using var context = DbFactory.CreateDbContext();
+        var comments = await context.Comments.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+        foreach (var comment in comments)
+        {
+            context.Comments.Remove(comment);
+        }
+        var pictures = await context.Pictures.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+        foreach (var picture in pictures)
+        {
+            string path = Path.Combine("StaticFiles", picture.Path);
+            context.Pictures.Remove(picture);
+            File.Delete(path);
+        }
         context.Patterns.Remove(pattern!);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/patterns");

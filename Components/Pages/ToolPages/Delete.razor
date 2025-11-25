@@ -64,6 +64,18 @@
     private async Task DeleteTool()
     {
         using var context = DbFactory.CreateDbContext();
+        var comments = await context.Comments.Where(c => c.CraftObjectId == tool.Id).ToListAsync();
+        foreach (var comment in comments)
+        {
+            context.Comments.Remove(comment);
+        }
+        var pictures = await context.Pictures.Where(c => c.CraftObjectId == tool.Id).ToListAsync();
+        foreach (var picture in pictures)
+        {
+            string path = Path.Combine("StaticFiles", picture.Path);
+            context.Pictures.Remove(picture);
+            File.Delete(path);
+        }
         context.Tools.Remove(tool!);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/tools");

@@ -1,4 +1,5 @@
 ﻿@page "/tools/create"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models
 @inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
@@ -40,6 +41,7 @@
                 <InputText id="name" @bind-Value="Tool.Name" class="form-control" /> 
                 <ValidationMessage For="() => Tool.Name" class="text-danger" /> 
             </div>        
+            <PictureInterface newPictures="@newPictures" maxFileSizeBytes="@maxFileSizeBytes" />
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -53,11 +55,24 @@
     [SupplyParameterFromForm]
     private Tool Tool { get; set; } = new();
 
+    private List<Tuple<Picture, IBrowserFile>> newPictures = new List<Tuple<Picture, IBrowserFile>>();
+    private int maxFileSizeBytes = 1024 * 1024;
+
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddTool()
     {
         using var context = DbFactory.CreateDbContext();
         context.Tools.Add(Tool);
+        await context.SaveChangesAsync();
+
+        foreach (var item in newPictures)
+        {
+            item.Item1.CraftObject = Tool;
+            item.Item1.CraftObjectId = Tool.Id;
+            await using FileStream fs = new(Path.Combine("StaticFiles", item.Item1.Path), FileMode.Create);
+            await item.Item2.OpenReadStream(maxFileSizeBytes).CopyToAsync(fs);
+            context.Pictures.Add(item.Item1);
+        }
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/tools");
     }
