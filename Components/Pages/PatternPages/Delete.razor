@@ -57,7 +57,7 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        pattern = await context.Patterns.FirstOrDefaultAsync(m => m.Id == Id);
+        pattern = await context.Patterns.Include(p => p.Tools).ThenInclude(t => t.Patterns).Include(p => p.Yarns).ThenInclude(y => y.Patterns).FirstOrDefaultAsync(m => m.Id == Id);
 
         var claims = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
         if (claims is not null)
@@ -90,6 +90,15 @@
             context.Pictures.Remove(picture);
             File.Delete(path);
         }
+        foreach (var tool in pattern.Tools)
+        {
+            tool.Patterns.Remove(pattern);
+        }
+        foreach (var yarn in pattern.Yarns)
+        {
+            yarn.Patterns.Remove(pattern);
+        }
+
         context.Patterns.Remove(pattern!);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/patterns");

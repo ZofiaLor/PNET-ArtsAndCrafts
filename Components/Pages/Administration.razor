@@ -3,8 +3,11 @@
 @rendermode InteractiveServer
 @using ArtsAndCrafts.Data
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
 
@@ -24,6 +27,7 @@ else
                 <th scope="col">Email</th>
                 <th scope="col">Admin priviledge</th>
                 <th scope="col">Edit priviledge</th>
+                <th scope="col">Delete user account</th>
             </tr>
         </thead>
         <tbody class="table-group-divider">
@@ -53,6 +57,9 @@ else
                             <button type="button" class="btn btn-success" @onclick="@(e => ChangePriviledges(userRole))">Grant admin priviledge</button>
                         </td>
                     }
+                    <td>
+                        <button type="button" class="btn btn-danger" @onclick="@(e => DeleteUser(userRole.user))">Delete user</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -109,8 +116,43 @@ else
         bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete user {user.UserName}?");
         if (confirmed)
         {
+            await DeleteUserPatterns(user);
             await UserManager.DeleteAsync(user);
+            NavigationManager.NavigateTo("/administration"); // TODO this doesnt refresh the page
         }
+    }
+
+    private async Task DeleteUserPatterns(ApplicationUser user)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var patterns = await context.Patterns.Include(p => p.Tools).ThenInclude(t => t.Patterns).Include(p => p.Yarns).ThenInclude(y => y.Patterns).Where(p => p.AuthorId == user.Id).ToListAsync();
+        foreach (var pattern in patterns)
+        {
+            var comments = await context.Comments.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+            foreach (var comment in comments)
+            {
+                context.Comments.Remove(comment);
+            }
+            var pictures = await context.Pictures.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+            foreach (var picture in pictures)
+            {
+                string path = Path.Combine("StaticFiles", picture.Path);
+                context.Pictures.Remove(picture);
+                File.Delete(path);
+            }
+            foreach (var tool in pattern.Tools)
+            {
+                tool.Patterns.Remove(pattern);
+            }
+            foreach (var yarn in pattern.Yarns)
+            {
+                yarn.Patterns.Remove(pattern);
+            }
+
+            context.Patterns.Remove(pattern!);
+            await context.SaveChangesAsync();
+        }
+        
     }
 
 }
