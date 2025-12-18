@@ -1,0 +1,116 @@
+﻿@page "/administration"
+@attribute [Authorize(Roles = "Admin")]
+@rendermode InteractiveServer
+@using ArtsAndCrafts.Data
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject IJSRuntime JsRuntime
+
+
+<h3>Administration</h3>
+
+
+@if (users.Count() == 0)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr class ="table-primary">
+                <th scope="col">Username</th>
+                <th scope="col">Email</th>
+                <th scope="col">Admin priviledge</th>
+                <th scope="col">Edit priviledge</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @foreach(var userRole in users)
+            {
+                <tr>
+                    <td>@userRole.user.UserName</td>
+                    <td>@userRole.user.Email</td>
+                    @if (userRole.isAdmin)
+                    {
+                        <td class="table-success">Yes</td>
+                        @if (currentUser.Id == userRole.user.Id)
+                        {
+                            <td></td>
+                        }
+                        else
+                        {
+                            <td>
+                                <button type="button" class="btn btn-danger" @onclick="@(e => ChangePriviledges(userRole))">Remove admin priviledge</button>
+                            </td>
+                        }
+                    }
+                    else
+                    {
+                        <td>No</td>
+                        <td>
+                            <button type="button" class="btn btn-success" @onclick="@(e => ChangePriviledges(userRole))">Grant admin priviledge</button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+
+@code {
+    private record class UserRole
+    {
+        public ApplicationUser user;
+        public bool isAdmin;
+        public UserRole(ApplicationUser user, bool isAdmin)
+        {
+            this.user = user;
+            this.isAdmin = isAdmin;
+        }
+    }
+    List<UserRole> users = new List<UserRole>();
+    ApplicationUser? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var username = (await _authenticationStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        currentUser = await UserManager.FindByNameAsync(username);
+        var applicationUsers = UserManager.Users.ToList();
+        foreach(var user in applicationUsers)
+        {
+            var role = await UserManager.IsInRoleAsync(user, "Admin");
+            users.Add(new UserRole(user, role));
+        }
+    }
+
+    async Task ChangePriviledges(UserRole userRole)
+    {
+        bool isInRole = await UserManager.IsInRoleAsync(userRole.user, "Admin");
+        if (isInRole)
+        {
+            await UserManager.RemoveFromRoleAsync(userRole.user, "Admin");
+            userRole.isAdmin = false;
+        }
+        else
+        {
+            await UserManager.AddToRoleAsync(userRole.user, "Admin");
+            userRole.isAdmin = true;
+        }
+        StateHasChanged();
+    }
+
+    async Task DeleteUser(ApplicationUser user)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete user {user.UserName}?");
+        if (confirmed)
+        {
+            await UserManager.DeleteAsync(user);
+        }
+    }
+
+}
