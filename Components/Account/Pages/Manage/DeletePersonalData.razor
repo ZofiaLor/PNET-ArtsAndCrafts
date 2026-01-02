@@ -2,6 +2,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Data
 
 @inject UserManager<ApplicationUser> UserManager
@@ -9,6 +10,7 @@
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<DeletePersonalData> Logger
+@inject IDbContextFactory<ArtsAndCrafts.Data.ApplicationDbContext> DbFactory
 
 <PageTitle>Delete Personal Data</PageTitle>
 
@@ -18,7 +20,7 @@
 
 <div class="alert alert-warning" role="alert">
     <p>
-        <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+        <strong>Deleting this data will permanently remove your account, including all your patterns and comments. This cannot be recovered.</strong>
     </p>
 </div>
 
@@ -64,6 +66,7 @@
             return;
         }
 
+        await DeleteUserPatterns(user);
         var result = await UserManager.DeleteAsync(user);
         if (!result.Succeeded)
         {
@@ -76,6 +79,59 @@
         Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
 
         RedirectManager.RedirectToCurrentPage();
+    }
+
+    private async Task DeleteUserPatterns(ApplicationUser user)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var patterns = await context.Patterns.Include(p => p.Tools).ThenInclude(t => t.Patterns).Include(p => p.Yarns).ThenInclude(y => y.Patterns).Where(p => p.AuthorId == user.Id).ToListAsync();
+        foreach (var pattern in patterns)
+        {
+            var patternComments = await context.Comments.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+            foreach (var comment in patternComments)
+            {
+                context.Comments.Remove(comment);
+            }
+            var pictures = await context.Pictures.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+            foreach (var picture in pictures)
+            {
+                string path = Path.Combine("StaticFiles", picture.Path);
+                context.Pictures.Remove(picture);
+                File.Delete(path);
+            }
+            foreach (var tool in pattern.Tools)
+            {
+                tool.Patterns.Remove(pattern);
+            }
+            foreach (var yarn in pattern.Yarns)
+            {
+                yarn.Patterns.Remove(pattern);
+            }
+
+            context.Patterns.Remove(pattern!);
+            await context.SaveChangesAsync();
+        }
+        var userComments = await context.Comments.Where(c => c.AuthorId == user.Id).ToListAsync();
+        foreach (var comment in userComments)
+        {
+            context.Comments.Remove(comment);
+        }
+        var patternUsers = await context.PatternUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var patternUser in patternUsers)
+        {
+            context.PatternUsers.Remove(patternUser);
+        }
+        var toolUsers = await context.ToolUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var toolUser in toolUsers)
+        {
+            context.ToolUsers.Remove(toolUser);
+        }
+        var yarnUsers = await context.YarnUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var yarnUser in yarnUsers)
+        {
+            context.YarnUsers.Remove(yarnUser);
+        }
+        await context.SaveChangesAsync();
     }
 
     private sealed class InputModel

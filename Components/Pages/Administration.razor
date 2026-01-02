@@ -118,7 +118,7 @@ else
         {
             await DeleteUserPatterns(user);
             await UserManager.DeleteAsync(user);
-            NavigationManager.NavigateTo("/administration"); // TODO this doesnt refresh the page
+            NavigationManager.NavigateTo("/administration", true); // TODO this doesnt refresh the page
         }
     }
 
@@ -128,8 +128,8 @@ else
         var patterns = await context.Patterns.Include(p => p.Tools).ThenInclude(t => t.Patterns).Include(p => p.Yarns).ThenInclude(y => y.Patterns).Where(p => p.AuthorId == user.Id).ToListAsync();
         foreach (var pattern in patterns)
         {
-            var comments = await context.Comments.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
-            foreach (var comment in comments)
+            var patternComments = await context.Comments.Where(c => c.CraftObjectId == pattern.Id).ToListAsync();
+            foreach (var comment in patternComments)
             {
                 context.Comments.Remove(comment);
             }
@@ -152,7 +152,27 @@ else
             context.Patterns.Remove(pattern!);
             await context.SaveChangesAsync();
         }
-        
+        var userComments = await context.Comments.Where(c => c.AuthorId == user.Id).ToListAsync();
+        foreach (var comment in userComments)
+        {
+            context.Comments.Remove(comment);
+        }
+        var patternUsers = await context.PatternUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var patternUser in patternUsers)
+        {
+            context.PatternUsers.Remove(patternUser);
+        }
+        var toolUsers = await context.ToolUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var toolUser in toolUsers)
+        {
+            context.ToolUsers.Remove(toolUser);
+        }
+        var yarnUsers = await context.YarnUsers.Where(u => u.UserId == user.Id).ToListAsync();
+        foreach (var yarnUser in yarnUsers)
+        {
+            context.YarnUsers.Remove(yarnUser);
+        }
+        await context.SaveChangesAsync();
     }
 
 }
