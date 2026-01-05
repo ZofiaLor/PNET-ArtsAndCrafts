@@ -42,11 +42,11 @@ else
                     <InputTextArea id="content" @bind-Value="Pattern.Content" class="form-control" /> 
                     <ValidationMessage For="() => Pattern.Content" class="text-danger" /> 
                 </div>   
-                <AddToolsYarnCreateComponent yarnToAddList="@yarnToAddList" toolToAddList="@toolToAddList" toolList="@toolList" yarnList="@yarnList" />
                 <PictureInterface newPictures="@newPictures" maxFileSizeBytes="@maxFileSizeBytes" />
                 <button type="submit" class="btn btn-primary">Create</button>
             </EditForm>
         </div>
+        <AddToolsYarnCreateComponent yarnToAddList="@yarnToAddList" toolToAddList="@toolToAddList" context="@context" />
     </div>
 }
 

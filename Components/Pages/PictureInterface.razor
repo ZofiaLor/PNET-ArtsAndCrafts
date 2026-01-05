@@ -28,12 +28,12 @@
     </ul>
     @if (pictureList is not null)
     {
-        <ul class="list-group">
+        <ul class="list-group" style="max-height: 400px; overflow: auto;">
             @foreach (var picture in pictureList)
             {
                 <li class="list-group-item flex-fill">
                     <img src="@Path.Combine("static-files", picture.Path)" style="max-height: 20px; max-width: auto;" />
-                    <input type="text" @bind="picture.Name" />
+                    <input type="text" @bind="picture.Name" /> @(' ')
                     @if (picturesToDelete.Contains(picture))
                     {
                         <button type="button" class="btn btn-outline-danger" @onclick="@(e => picturesToDelete.Remove(picture))">Restore</button>

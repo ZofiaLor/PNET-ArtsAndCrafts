@@ -23,7 +23,7 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="Pattern" OnValidSubmit="UpdatePattern" FormName="edit" Enhance>
+            <EditForm method="post" Model="Pattern" OnValidSubmit="UpdatePattern" FormName="edit" Context="editContext" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Pattern.Id" value="@Pattern.Id" />
@@ -45,13 +45,13 @@ else
                     <InputTextArea id="content" @bind-Value="Pattern.Content" class="form-control" />
                     <ValidationMessage For="() => Pattern.Content" class="text-danger" />
                 </div>
-                <AddToolsYarnComponent Pattern="@Pattern" toolList="@toolList" yarnList="@yarnList" />
 
                 <PictureInterface craftObject="@Pattern" pictureList="@pictureList" newPictures="@newPictures" maxFileSizeBytes="@maxFileSizeBytes" picturesToDelete="@picturesToDelete"/>
                 
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>
+        <AddToolsYarnComponent Pattern="@Pattern" context="@context" />
     </div>
 }
 

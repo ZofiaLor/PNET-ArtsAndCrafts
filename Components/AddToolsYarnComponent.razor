@@ -9,73 +9,81 @@
 }
 else
 {
-    <div class= "mb-3" >
-        Add yarn to pattern:
-        <div class="card card-body" style="max-height: 200px; overflow: auto;">
-            <input type="search" @bind="yarnFilter" @bind:event="oninput" />
-            <ul class="list-group list-group-flush">
-                @foreach (var yarn in filteredYarns)
-                {
-                    @if (Pattern.Yarns is not null && Pattern.Yarns.Contains(yarn))
+    <div class="col-md-4">
+        <div class="mb-3">
+            Add yarn to pattern:
+            <div class="gap-2 d-md-flex mb-3">
+                <input type="text" class="col-md-10" placeholder="Search yarn names" @bind="yarnFilter" />
+                <button type="button" class="btn btn-primary btn-sm col-md-2" @onclick="@(e => SearchYarns())">FIND</button>
+            </div>
+            <div class="card card-body" style="max-height: 400px; overflow: auto;">
+                <ul class="list-group list-group-flush">
+                    @foreach (var yarn in filteredYarns)
                     {
-                        <li class="list-group-item flex-fill">
-                            <button type="button" class="btn btn-danger" @onclick="@(e => Pattern.Yarns.Remove(yarn))">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                                </svg>
-                            </button>
-                            <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
-                        </li>
+                        @if (Pattern.Yarns is not null && Pattern.Yarns.Contains(yarn))
+                        {
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-danger" @onclick="@(e => Pattern.Yarns.Remove(yarn))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-success" @onclick="@(e => Pattern.Yarns.Add(yarn))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
+                            </li>
+                        }
                     }
-                    else
-                    {
-                        <li class="list-group-item flex-fill">
-                            <button type="button" class="btn btn-success" @onclick="@(e => Pattern.Yarns.Add(yarn))">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                                </svg>
-                            </button>
-                            <a href=" @($"yarns/details?id={yarn.Id}")">@yarn.Name</a>
-                        </li>
-                    }
-                }
-            </ul>
+                </ul>
+            </div>
         </div>
-    </div>
 
-    <div class="mb-3">
-        Add tool to pattern:
-        <div class="card card-body" style="max-height: 200px; overflow: auto;">
-            <input type="search" @bind="toolFilter" @bind:event="oninput" />
-            <ul class="list-group list-group-flush">
-                @foreach (var tool in filteredTools)
-                {
-                    @if (Pattern.Tools is not null && Pattern.Tools.Contains(tool))
+        <div class="mb-3">
+            Add tool to pattern:
+            <div class="gap-2 d-md-flex mb-3">
+                <input type="text" class="col-md-10" placeholder="Search tool names" @bind="toolFilter" />
+                <button type="button" class="btn btn-primary btn-sm col-md-2" @onclick="@(e => SearchTools())">FIND</button>
+            </div>
+            <div class="card card-body" style="max-height: 400px; overflow: auto;">
+                <ul class="list-group list-group-flush">
+                    @foreach (var tool in filteredTools)
                     {
-                        <li class="list-group-item flex-fill">
-                            <button type="button" class="btn btn-danger" @onclick="@(e => Pattern.Tools.Remove(tool))">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                                </svg>
-                            </button>
-                            <a href=" @($"tools/details?id={tool.Id}")">@tool.Name</a>
-                        </li>
+                        @if (Pattern.Tools is not null && Pattern.Tools.Contains(tool))
+                        {
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-danger" @onclick="@(e => Pattern.Tools.Remove(tool))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"tools/details?id={tool.Id}")">@tool.Name</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="list-group-item flex-fill">
+                                <button type="button" class="btn btn-success" @onclick="@(e => Pattern.Tools.Add(tool))">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                    </svg>
+                                </button>
+                                <a href=" @($"tools/details?id={tool.Id}")">@tool.Name</a>
+                            </li>
+                        }
                     }
-                    else
-                    {
-                        <li class="list-group-item flex-fill">
-                            <button type="button" class="btn btn-success" @onclick="@(e => Pattern.Tools.Add(tool))">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                                </svg>
-                            </button>
-                            <a href=" @($"tools/details?id={tool.Id}")">@tool.Name</a>
-                        </li>
-                    }
-                }
-            </ul>
+                </ul>
+            </div>
         </div>
-    </div>
+    </div>  
 }
 
 
@@ -84,18 +92,26 @@ else
     public Pattern Pattern { get; set; }
 
     [Parameter]
-    public List<Yarn> yarnList { get; set; }
-    [Parameter]
-    public List<Tool>? toolList { get; set; }
+    public ApplicationDbContext context { get; set; }
 
     private string yarnFilter = string.Empty;
-    private IEnumerable<Yarn>? filteredYarns;
+    private List<Yarn> filteredYarns = new List<Yarn>();
     private string toolFilter = string.Empty;
-    private IEnumerable<Tool>? filteredTools;
+    private List<Tool> filteredTools = new List<Tool>();
 
     protected override async Task OnInitializedAsync()
     {
-        filteredYarns ??= yarnList.Where(y => y.Name.Contains(yarnFilter));
-        filteredTools ??= toolList.Where(t => t.Name.Contains(toolFilter));
+        filteredYarns = await context.Yarns.Where(y => Pattern.Yarns.Contains(y)).ToListAsync();
+        filteredTools = await context.Tools.Where(t => Pattern.Tools.Contains(t)).ToListAsync();
+    }
+
+    private async Task SearchYarns()
+    {
+        filteredYarns = await context.Yarns.Where(y => Pattern.Yarns.Contains(y) || (!string.IsNullOrEmpty(yarnFilter) && y.Name.ToUpper().Contains(yarnFilter.ToUpper()))).ToListAsync();
+    }
+
+    private async Task SearchTools()
+    {
+        filteredTools = await context.Tools.Where(t => Pattern.Tools.Contains(t) || (!string.IsNullOrEmpty(toolFilter) && t.Name.ToUpper().Contains(toolFilter.ToUpper()))).ToListAsync();
     }
 }
