@@ -1,4 +1,5 @@
 ﻿@page "/tools/create"
+@attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using ArtsAndCrafts.Models

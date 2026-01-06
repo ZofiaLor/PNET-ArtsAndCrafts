@@ -32,7 +32,10 @@
             <dd class="col-sm-10">@tool.Size</dd>
         </dl>
         <div>
-            <a href="@($"/tools/edit?id={tool.Id}")">Edit</a> |
+            <AuthorizeView Roles="Admin">
+                <a href="@($"tools/edit?id={tool.Id}")">Edit</a> |
+                <a href="@($"tools/delete?id={tool.Id}")">Delete</a> |
+            </AuthorizeView>
             <a href="@($"/tools")">Back to List</a>
         </div>
         @if (user is not null)

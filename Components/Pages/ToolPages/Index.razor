@@ -11,9 +11,11 @@
 
 <h1>Index</h1>
 
-<p>
-    <a href="tools/create">Create New</a>
-</p>
+<AuthorizeView Roles="Admin">
+    <p>
+        <a href="tools/create">Create New</a>
+    </p>
+</AuthorizeView>
 
 <div>
     <form action="/tools" data-enhance>
@@ -40,9 +42,11 @@
     <PropertyColumn Property="tool => tool.Size" />
 
     <TemplateColumn Context="tool">
-        <a href="@($"tools/edit?id={tool.Id}")">Edit</a> |
-        <a href="@($"tools/details?id={tool.Id}")">Details</a> |
-        <a href="@($"tools/delete?id={tool.Id}")">Delete</a>
+        <a href="@($"tools/details?id={tool.Id}")">Details</a>
+        <AuthorizeView Roles="Admin">
+            | <a href="@($"tools/edit?id={tool.Id}")">Edit</a> |
+            <a href="@($"tools/delete?id={tool.Id}")">Delete</a>
+        </AuthorizeView>
     </TemplateColumn>
 </QuickGrid>
 <Paginator State="pagination" />

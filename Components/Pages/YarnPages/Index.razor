@@ -11,9 +11,11 @@
 
 <h1>Index</h1>
 
-<p>
-    <a href="yarns/create">Create New</a>
-</p>
+<AuthorizeView Roles="Admin">
+    <p>
+        <a href="yarns/create">Create New</a>
+    </p>
+</AuthorizeView>
 
 <div>
     <form action="/yarns" data-enhance>
@@ -41,9 +43,11 @@
     <PropertyColumn Property="yarn => yarn.Weight" />
 
     <TemplateColumn Context="yarn">
-        <a href="@($"yarns/edit?id={yarn.Id}")">Edit</a> |
-        <a href="@($"yarns/details?id={yarn.Id}")">Details</a> |
-        <a href="@($"yarns/delete?id={yarn.Id}")">Delete</a>
+        <a href="@($"yarns/details?id={yarn.Id}")">Details</a> 
+        <AuthorizeView Roles="Admin">
+            | <a href="@($"yarns/edit?id={yarn.Id}")">Edit</a> |
+            <a href="@($"yarns/delete?id={yarn.Id}")">Delete</a>
+        </AuthorizeView>
     </TemplateColumn>
 </QuickGrid>
 <Paginator State="pagination" />

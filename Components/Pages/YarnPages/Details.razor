@@ -31,7 +31,10 @@
             <dd class="col-sm-10">@yarn.Weight</dd>
         </dl>
         <div>
-            <a href="@($"/yarns/edit?id={yarn.Id}")">Edit</a> |
+            <AuthorizeView Roles="Admin">
+                <a href="@($"yarns/edit?id={yarn.Id}")">Edit</a> |
+                <a href="@($"yarns/delete?id={yarn.Id}")">Delete</a> |
+            </AuthorizeView>
             <a href="@($"/yarns")">Back to List</a>
         </div>
         @if (user is not null)
