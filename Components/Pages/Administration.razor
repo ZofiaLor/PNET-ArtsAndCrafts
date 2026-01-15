@@ -25,8 +25,8 @@ else
             <tr class ="table-primary">
                 <th scope="col">Username</th>
                 <th scope="col">Email</th>
-                <th scope="col">Admin priviledge</th>
-                <th scope="col">Edit priviledge</th>
+                <th scope="col">Admin privilege</th>
+                <th scope="col">Edit privilege</th>
                 <th scope="col">Delete user account</th>
             </tr>
         </thead>
@@ -46,7 +46,7 @@ else
                         else
                         {
                             <td>
-                                <button type="button" class="btn btn-danger" @onclick="@(e => ChangePriviledges(userRole))">Remove admin priviledge</button>
+                                <button type="button" class="btn btn-danger" @onclick="@(e => ChangePrivileges(userRole))">Remove admin privilege</button>
                             </td>
                         }
                     }
@@ -54,7 +54,7 @@ else
                     {
                         <td>No</td>
                         <td>
-                            <button type="button" class="btn btn-success" @onclick="@(e => ChangePriviledges(userRole))">Grant admin priviledge</button>
+                            <button type="button" class="btn btn-success" @onclick="@(e => ChangePrivileges(userRole))">Grant admin privilege</button>
                         </td>
                     }
                     <td>
@@ -95,7 +95,7 @@ else
         }
     }
 
-    async Task ChangePriviledges(UserRole userRole)
+    async Task ChangePrivileges(UserRole userRole)
     {
         bool isInRole = await UserManager.IsInRoleAsync(userRole.user, "Admin");
         if (isInRole)
