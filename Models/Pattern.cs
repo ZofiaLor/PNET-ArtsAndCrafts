@@ -14,6 +14,5 @@ namespace ArtsAndCrafts.Models
         public ApplicationUser Author { get; set; }
         public ICollection<Yarn> Yarns { get; set; }
         public ICollection<Tool> Tools { get; set; }
-        public ICollection<Tag> Tags { get; set; }
     }
 }
