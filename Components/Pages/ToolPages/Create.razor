@@ -16,7 +16,12 @@
     <div class="col-md-4">
         <EditForm method="post" Model="Tool" OnValidSubmit="AddTool" FormName="create" Enhance>
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <InputText id="name" @bind-Value="Tool.Name" class="form-control" />
+                <ValidationMessage For="() => Tool.Name" class="text-danger" />
+            </div>
             <div class="mb-3">
                 <label for="material" class="form-label">Material:</label> 
                 <InputText id="material" @bind-Value="Tool.Material" class="form-control" /> 
@@ -36,12 +41,7 @@
                 <label for="size" class="form-label">Size:</label> 
                 <InputNumber id="size" @bind-Value="Tool.Size" class="form-control" /> 
                 <ValidationMessage For="() => Tool.Size" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="name" class="form-label">Name:</label> 
-                <InputText id="name" @bind-Value="Tool.Name" class="form-control" /> 
-                <ValidationMessage For="() => Tool.Name" class="text-danger" /> 
-            </div>        
+            </div>    
             <PictureInterface newPictures="@newPictures" maxFileSizeBytes="@maxFileSizeBytes" />
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>

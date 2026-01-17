@@ -64,9 +64,11 @@ else
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+var staticFilesPath = Path.Combine(builder.Environment.ContentRootPath, "StaticFiles");
+System.IO.Directory.CreateDirectory(Path.Combine(staticFilesPath, "images"));
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "StaticFiles")),
+    FileProvider = new PhysicalFileProvider(staticFilesPath),
     RequestPath = "/static-files"
 });
 app.UseAntiforgery();
